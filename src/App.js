@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "@emotion/styled";
-import {Button} from '@mui/material';
+import { Button } from '@mui/material';
 
 const PokemonRow = ({ pokemon, onSelect }) => (
     <tr>
@@ -82,50 +82,77 @@ const TableHeader = styled.th`
   font-size: x-large;
 `
 
-function App() {
-  // React hook
-  const [filter, filterSet] = React.useState(""); // return current state (filter) and filterSet sets value of the filter (event)
-  const [pokemon, pokemonSet] = React.useState([]);
-  const [selectedItem, selectedItemSet] = React.useState(null);
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      filter: "",
+      pokemon: [],
+      selectedItem: null,
+    }
+  }
+
+  // puts elements into the DOM
+  componentDidMount() {
+    fetch("http://localhost:3000/starting-react/pokemon.json") // endpoint that contains our pokemon data
+    .then((resp) => resp.json()) // returns a promise
+    .then((pokemon) => this.setState({
+      ...this.state,
+      pokemon,
+    }))
+  }
+
+  render() {
+    return (
+      <Container>
+        <Title>Pokemon Search</Title>
+    
+        <TwoColumnLayout>
+          <div>
+            <Input
+              value={this.state.filter} 
+              onChange={(event) => this.setState({
+                ...this.state,
+                filter: event.target.value
+              })}
+            />
+            <table width="100%">
+              <thead>
+                  <tr>
+                    <TableHeader>Name</TableHeader>
+                    <TableHeader>Type</TableHeader>
+                  </tr>
+              </thead>
+              <tbody>
+                {this.state.pokemon
+                  .filter((pokemon) => pokemon.name.english.toLowerCase().includes(this.state.filter.toLowerCase()))
+                  .slice(0, 20)
+                  .map((pokemon) => (
+                    <PokemonRow key={pokemon.id} pokemon={pokemon} onSelect={(pokemon) => this.setState({
+                      ...this.state,
+                      selectedItem: pokemon,
+                    })}/>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          {this.state.selectedItem && (<PokemonInfo {...this.state.selectedItem} />)}
+        </TwoColumnLayout>
+      </Container>
+    );
+  }
+}
+
+
+
 
   // runs a function in reaction to a change. Get data once upon page reload
-  React.useEffect(() => {
-    fetch("http://localhost:3000/starting-react/pokemon.json") // endpoint that contains our pokemon data
-    .then((resp) => resp.json()) // gives a promise
-    .then((data) => pokemonSet(data))
-  }, []);
+  // React.useEffect(() => {
+  //   fetch("http://localhost:3000/starting-react/pokemon.json") // endpoint that contains our pokemon data
+  //   .then((resp) => resp.json()) // gives a promise
+  //   .then((data) => pokemonSet(data))
+  // }, []);
 
-  return (
-    <Container>
-      <Title>Pokemon Search</Title>
-  
-      <TwoColumnLayout>
-        <div>
-          <Input
-            value={filter} 
-            onChange={(event) => filterSet(event.target.value)}
-          />
-          <table width="100%">
-            <thead>
-                <tr>
-                  <TableHeader>Name</TableHeader>
-                  <TableHeader>Type</TableHeader>
-                </tr>
-            </thead>
-            <tbody>
-              {pokemon
-                .filter((pokemon) => pokemon.name.english.toLowerCase().includes(filter.toLowerCase()))
-                .slice(0, 20)
-                .map((pokemon) => (
-                  <PokemonRow key={pokemon.id} pokemon={pokemon} onSelect={(pokemon) => selectedItemSet(pokemon)}/>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        {selectedItem && (<PokemonInfo {...selectedItem} />)}
-      </TwoColumnLayout>
-    </Container>
-  );
-}
 
 export default App;
