@@ -8,6 +8,30 @@ import PokemonFilter from "./components/PokemonFilter";
 import PokemonTable from "./components/PokemonTable";
 import PokemonContext from "./PokemonContext";
 
+// state is current state of the store 
+// action is an object defines the mutation to be applied to the state. Then a new state is returned
+const pokemonReducer = (state, action) => {
+  switch(action.type) {
+    case 'SET_FILTER':
+      return {
+        ...state,
+        filter: action.payload
+      };
+    case 'SET_POKEMON':
+      return {
+        ...state,
+        pokemon: action.payload
+    };
+    case 'SET_SELECTED_POKEMON':
+      return {
+        ...state,
+        selectedPokemon: action.payload
+    };
+    default: 
+    throw new Error("No action");
+  }
+};
+
 const Title = styled.h1`
   text-align: center;
 `;
@@ -21,36 +45,35 @@ const TwoColumnLayout = styled.div`
   grid-template-columns: 80% 20%;
   grid-column-gap: 1rem;
 `;
-const Input = styled.input`
-  width: 100%;
-  padding: 0.2rem;
-  font-size: large;
-`;
 
 function App() {
-  const [filter, filterSet] = React.useState("");
-  const [pokemon, pokemonSet] = React.useState(null);
-  const [selectedPokemon, selectedPokemonSet] = React.useState(null);
+  const [state, dispatch] = React.useReducer(pokemonReducer, {
+    pokemon: [],
+    filter: "",
+    selectedPokemon: null,
+  })
 
   React.useEffect(() => {
     fetch("http://localhost:3000/starting-react/pokemon.json")
       .then((resp) => resp.json())
-      .then((data) => pokemonSet(data));
+      .then((data) => 
+        dispatch({
+          type: 'SET_POKEMON',
+          payload: data,
+        })
+      );
   }, []);
 
-  if (!pokemon) {
+  if (!state.pokemon) {
     return <div>Loading data</div>;
   }
 
   return (
+    // share state with other components
     <PokemonContext.Provider
       value={{
-        filter, 
-        filterSet,
-        pokemon,
-        pokemonSet,
-        selectedPokemon,
-        selectedPokemonSet,
+        state,
+        dispatch,
       }}
     >
       <PageContainer>
